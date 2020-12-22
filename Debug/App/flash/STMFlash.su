@@ -1,0 +1,13 @@
+STMFlash.c:22:5:STMFLASH_ReadHalfWord	16	static
+STMFlash.c:31:6:STMFLASH_Write_NoCheck	32	static
+STMFlash.c:52:6:STMFLASH_Write	40	static
+STMFlash.c:114:6:STMFLASH_Read	40	static
+STMFlash.c:127:6:Test_Write	16	static
+STMFlash.c:132:6:WriteDeviceID	8	static
+STMFlash.c:136:6:ReadDeviceID	8	static
+STMFlash.c:142:6:writeVersion	8	static
+STMFlash.c:147:6:ReadVersion	8	static
+STMFlash.c:153:6:WriteAPPServer	16	static
+STMFlash.c:158:6:ReadAPPServer	8	static
+STMFlash.c:164:6:WriteIgnoreLock	16	static
+STMFlash.c:170:4:ReadIgnoreLock	16	static

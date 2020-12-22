@@ -1,0 +1,6 @@
+usart_4G.c:12:6:USART2_Init	40	static
+usart_4G.c:54:6:F4G_Init	32	static
+usart_4G.c:96:6:USART2_IRQHandler	16	static
+usart_4G.c:142:6:ConnectToServerBy4G	32	static
+usart_4G.c:188:6:F4G_ExitUnvarnishSend	8	static
+usart_4G.c:198:6:getModuleMes	24	static
