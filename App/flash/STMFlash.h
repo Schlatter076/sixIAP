@@ -32,8 +32,8 @@ extern unsigned char IgnoreLock[6];
 #define WIFI_SSID_ADDR  0x0803FF12
 #define WIFI_PWD_ADDR   0x0803FF80
 
-extern char *WDeviceID;
-extern char RDeviceID[9];
+__IO extern char *WDeviceID;
+__IO extern char RDeviceID[9];
 
 extern char *WVersion;
 extern char RVersion[21];

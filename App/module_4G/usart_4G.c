@@ -178,7 +178,11 @@ bool ConnectToServerBy4G(char* addr, char* port)
 		while (!Send_AT_Cmd(In4G, "AT+CIICR", "OK", NULL, 500))
 			;
 		Send_AT_Cmd(In4G, "AT+CIFSR", "OK", NULL, 500);
-	} while (!Send_AT_Cmd(In4G, p, "CONNECT", "ALREADY CONNECT", 1800));
+		while (!Send_AT_Cmd(In4G, p, "CONNECT", NULL, 1800))
+			;
+		F4G_ExitUnvarnishSend(); //退出透传
+	} while (!Send_AT_Cmd(In4G, "AT+CIPSTATUS", "CONNECT OK", NULL, 1800));
+	Send_AT_Cmd(In4G, "ATO", "CONNECT", NULL, 500);
 	myfree(p);
 	return 1;
 }
@@ -187,9 +191,9 @@ bool ConnectToServerBy4G(char* addr, char* port)
  */
 void F4G_ExitUnvarnishSend(void)
 {
-	delay_ms(1000);
+	delay_ms(1500);
 	F4G_USART("+++");
-	delay_ms(500);
+	delay_ms(1000);
 }
 /***********************以下开始为与服务器通信业务代码部分*************************************/
 /**

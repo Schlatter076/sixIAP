@@ -91,7 +91,7 @@ void HSI_SetSysClock(uint32_t pllmul)
  */
 int main(void)
 {
-//	SystemInit();
+	RCC_HSEConfig(RCC_HSE_OFF);
 	HSI_SetSysClock(RCC_PLLMul_9);
 	SysTick_Init(36);
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);  //中断优先级分组 分2组S

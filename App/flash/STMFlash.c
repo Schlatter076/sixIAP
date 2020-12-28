@@ -6,8 +6,8 @@
  */
 #include "STMFlash.h"
 
-char *WDeviceID = NULL;
-char RDeviceID[9] = {0};
+__IO char *WDeviceID = NULL;
+__IO char RDeviceID[9] = {0};
 
 char *WVersion = NULL;
 char RVersion[21] = {0};
