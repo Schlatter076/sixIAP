@@ -18,6 +18,10 @@
 #include "STMFlash.h"
 #include "base64.h"
 
+#define TCP_IP "server.dayitc.com"
+#define TCP_PORT "5599"
+
+
 #define TCP_MAX_LEN 1024		  //最大接收缓存字节数
 #define BASE64_BUF_LEN 512
 
@@ -50,6 +54,7 @@ struct STRUCT_USART_Fram  //定义一个全局串口数据帧的处理结构体
 	};
 };
 extern struct STRUCT_USART_Fram F4G_Fram;
+extern struct STRUCT_USART_Fram WIFI_Fram;
 
 extern struct STRUCT_USART_Params
 {
@@ -92,6 +97,14 @@ typedef enum
 {
 	In4G = 1, InWifi = 2,
 } ENUM_Internet_TypeDef;
+
+typedef struct
+{
+	char ssid[100];
+	char pwd[100];
+} ParamsOfWifiJoinAP_TypeDef;
+
+extern ParamsOfWifiJoinAP_TypeDef ParamsOfWifiJoinAPInit;
 
 void _USART_printf(USART_TypeDef * USARTx, char * Data, ...);
 bool Send_AT_Cmd(ENUM_Internet_TypeDef internet, char *cmd, char *ack1,

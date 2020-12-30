@@ -12,6 +12,7 @@ uint32_t JumpAddress;
 uint32_t BlockNbr = 0, UserMemoryMask = 0;
 __IO uint32_t FlashProtection = 0;
 
+volatile u8 initing = 0;
 volatile u8 updating = 0;
 
 volatile u16 flagCPY = 0;
@@ -44,7 +45,14 @@ void request(char *cmd, u8 choose)
 	getRegisterStr(rBuf, 128, cmd, &TCP_Params, '2', RVersion, "06");
 	if (choose & 0x0F)
 	{
-		TCP_sendStr(USART2, rBuf);
+		if (WIFI_Fram.allowHeart)
+		{
+			TCP_sendStr(UART4, rBuf);
+		}
+		else
+		{
+			TCP_sendStr(USART2, rBuf);
+		}
 	}
 	if (choose & 0xF0)
 	{
@@ -61,7 +69,14 @@ void request4UPdate(char *cmd, u16 num, u8 choose)
 	catReqStr4UPdate(rBuf, 128, cmd, num);
 	if (choose & 0x0F)
 	{
-		TCP_sendStr(USART2, rBuf);
+		if (WIFI_Fram.allowHeart)
+		{
+			TCP_sendStr(UART4, rBuf);
+		}
+		else
+		{
+			TCP_sendStr(USART2, rBuf);
+		}
 	}
 	if (choose & 0xF0)
 	{
@@ -81,7 +96,14 @@ void request4UPdataComplete(u8 choose)
 	snprintf(rBuf, 128, "%s,%s,%s", (const char *) RDeviceID, "08", RVersion);
 	if (choose & 0x0F)
 	{
-		TCP_sendStr(USART2, rBuf);
+		if (WIFI_Fram.allowHeart)
+		{
+			TCP_sendStr(UART4, rBuf);
+		}
+		else
+		{
+			TCP_sendStr(USART2, rBuf);
+		}
 	}
 	if (choose & 0xF0)
 	{
@@ -186,6 +208,7 @@ u8 IAP_RunApp(void)
 		TIM_Cmd(TIM4, DISABLE); //关闭定时器4
 		USART_Cmd(USART1, DISABLE);
 		USART_Cmd(USART2, DISABLE);
+		USART_Cmd(UART4, DISABLE);
 		JumpAddress = *(__IO uint32_t*) (ApplicationAddress + 4);
 		Jump_To_Application = (pFunction) JumpAddress;
 		__set_MSP(*(__IO uint32_t*) ApplicationAddress);
@@ -199,7 +222,7 @@ u8 IAP_RunApp(void)
 	}
 }
 /************************************************************************/
-void IAP_Main_Menu(void)
+void IAP_Main_Menu(struct STRUCT_USART_Fram *fram)
 {
 	BlockNbr = (ApplicationAddress - 0x08000000) >> 12;
 
@@ -240,12 +263,12 @@ void IAP_Main_Menu(void)
 		request(REQ_REGISTER, 0xFF);
 		iapREQ_cnt++;
 		delay_ms(500);
-		if (F4G_Fram.InfBit.FinishFlag)
+		if (fram->InfBit.FinishFlag)
 		{
-			F4G_Fram.InfBit.FinishFlag = 0;
+			fram->InfBit.FinishFlag = 0;
 			LOCAL_SERVER_SWITCH = 0x0F;
-			mySplit(&F4G_Fram, ",");
-			if (check_response((char *) F4G_Fram.Server_Command[1]))
+			mySplit(fram, ",");
+			if (check_response((char *) fram->Server_Command[1], fram))
 				return;
 		}
 		else if (USART1_Record_Struct.InfBit.FramFinishFlag)
@@ -253,7 +276,7 @@ void IAP_Main_Menu(void)
 			USART1_Record_Struct.InfBit.FramFinishFlag = 0; //清除标志位
 			LOCAL_SERVER_SWITCH = 0xF0;
 			UT_split(USART1_Record_Struct.DATA, ",");
-			if (check_response(USART1_Record_Struct.Server_Command[1]))
+			if (check_response(USART1_Record_Struct.Server_Command[1], fram))
 				return;
 		}
 	}
@@ -262,7 +285,7 @@ void IAP_Main_Menu(void)
 /**
  * 校验响应的字符串
  */
-u8 check_response(char *str)
+u8 check_response(char *str, struct STRUCT_USART_Fram *fram)
 {
 	if (memcmp(str, RES_REGISTER_AND_UPDATE, 2) == 0)
 	{
@@ -288,11 +311,8 @@ u8 check_response(char *str)
 	{
 		if (LOCAL_SERVER_SWITCH == 0x0F)
 		{
-			printf("server params=%s\r\n", F4G_Fram.ServerData);
-			WriteAPPServer((char *) F4G_Fram.ServerData);
-			F4G_ExitUnvarnishSend();
-			Send_AT_Cmd(In4G, "AT+CIPCLOSE", "OK", NULL, 500);
-			Send_AT_Cmd(In4G, "AT+RSTSET", "OK", NULL, 500);
+			printf("server params=%s\r\n", fram->ServerData);
+			WriteAPPServer((char *) fram->ServerData);
 		}
 		else
 		{
@@ -329,7 +349,7 @@ u8 check_response(char *str)
 	return 0;
 }
 
-int8_t IAP_Update(void)
+int8_t IAP_Update(struct STRUCT_USART_Fram *fram)
 {
 	char *result;
 	char md5[32];
@@ -340,26 +360,26 @@ int8_t IAP_Update(void)
 	uint32_t j;
 	char m[32] =
 	{ 0 };
-	u8 reqCnt = 0;
 	char *temData = NULL;
 	char *BinStr = NULL;
 	u16 step = 0;
 
 	printf("Update begin.\r\n");
+	//initing = 0;
 	updating = 1;
 	while (1)
 	{
 		request(REQ_VERSION, LOCAL_SERVER_SWITCH); //请求固件版本信息
 		delay_ms(500);
-		if (F4G_Fram.InfBit.FinishFlag)
+		if (fram->InfBit.FinishFlag)
 		{
-			F4G_Fram.InfBit.FinishFlag = 0;
-			mySplit(&F4G_Fram, ",");
+			fram->InfBit.FinishFlag = 0;
+			mySplit(fram, ",");
 			//获取版本信息
-			if (memcmp(F4G_Fram.Server_Command[1],
+			if (memcmp(fram->Server_Command[1],
 			REQ_CURRENT_VERSION, 2) == 0)
 			{
-				result = strtok((char *) F4G_Fram.ServerData, "-");
+				result = strtok((char *) fram->ServerData, "-");
 				if (result != NULL)
 				{
 					WVersion = result;
@@ -440,36 +460,23 @@ int8_t IAP_Update(void)
 
 	for (size = 0; size < len; size++)
 	{
-//		do
-//		{
-//			if (reqCnt > 50)
-//			{
-//				request(REQ_ERROR_REPORT, LOCAL_SERVER_SWITCH);
-//				updating = 0;
-//				return 0;
-//			}
-//			request4UPdate(REQ_REQUEST_FRAME, size, LOCAL_SERVER_SWITCH);
-//			delay_ms(200);
-//			reqCnt++;
-//		}
 		request4UPdate(REQ_REQUEST_FRAME, size, LOCAL_SERVER_SWITCH);
 		//等待服务端数据返回
-		while (F4G_Fram.InfBit.FinishFlag == 0
+		while (fram->InfBit.FinishFlag == 0
 				&& USART1_Record_Struct.InfBit.FramFinishFlag == 0)
 			;
-		reqCnt = 0;
-		if (F4G_Fram.InfBit.FinishFlag)
+		if (fram->InfBit.FinishFlag)
 		{
-			F4G_Fram.InfBit.FinishFlag = 0;
-			mySplit(&F4G_Fram, ",");
+			fram->InfBit.FinishFlag = 0;
+			mySplit(fram, ",");
 			//获取版本信息
-			if (memcmp(F4G_Fram.Server_Command[1],
+			if (memcmp(fram->Server_Command[1],
 			RES_RESPONSE_FRAME, 2) == 0)
 			{
-				step = atoi(strtok((char *) F4G_Fram.ServerData, "-"));
+				step = atoi(strtok((char *) fram->ServerData, "-"));
 				if (step == size)
 				{
-					temData = (char *) F4G_Fram.ServerData;
+					temData = (char *) fram->ServerData;
 					while (*temData != '(')
 					{
 						temData++;
@@ -616,12 +623,12 @@ int8_t IAP_Update(void)
 		cnt++;
 		request4UPdataComplete(LOCAL_SERVER_SWITCH);
 		delay_ms(500);
-		if (F4G_Fram.InfBit.FinishFlag)
+		if (fram->InfBit.FinishFlag)
 		{
-			F4G_Fram.InfBit.FinishFlag = 0;
-			mySplit(&F4G_Fram, ",");
+			fram->InfBit.FinishFlag = 0;
+			mySplit(fram, ",");
 			//获取版本信息
-			if (memcmp(F4G_Fram.Server_Command[1],
+			if (memcmp(fram->Server_Command[1],
 			RES_UPDATE_FINEHED_REPONSE, 2) == 0)
 			{
 				printf("update data checked success!\r\n");

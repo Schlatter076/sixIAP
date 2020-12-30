@@ -82,7 +82,7 @@ void TIM4_IRQHandler(void)
 				LED_Status ^= 1;
 			}
 		}
-		if (F4G_Fram.init)
+		if (initing)
 		{
 			initCnt++;
 			if (initCnt == 50)

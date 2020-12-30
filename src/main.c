@@ -9,6 +9,7 @@
 #include "common.h"
 #include "iap.h"
 #include "tim4.h"
+#include "wifi.h"
 
 void HSI_SetSysClock(uint32_t pllmul)
 {
@@ -91,6 +92,7 @@ void HSI_SetSysClock(uint32_t pllmul)
  */
 int main(void)
 {
+	struct STRUCT_USART_Fram *fram;
 	RCC_HSEConfig(RCC_HSE_OFF);
 	HSI_SetSysClock(RCC_PLLMul_9);
 	SysTick_Init(36);
@@ -108,6 +110,29 @@ int main(void)
 	delay_ms(1000);
 
 	F4G_Init(115200);
+	if (!localUpdate)
+	{
+		WIFI_Init(115200);
+		//需要连接wifi
+		if (WIFI_Fram.AT_test_OK != 0 && ReadWifiFlag() == 0x5746)
+		{
+			WIFI_ExitUnvarnishSend();
+			WIFI_Fram.allowHeart = ConnectToServerByWIFI(TCP_IP, TCP_PORT);
+		}
+		if (WIFI_Fram.allowHeart == 0)
+		{
+			F4G_Fram.allowHeart = ConnectToServerBy4G(TCP_IP, TCP_PORT);
+			fram = &F4G_Fram;
+		}
+		else
+		{
+			fram = &WIFI_Fram;
+		}
+	}
+	else
+	{
+		fram = &F4G_Fram;
+	}
 
 	/* Infinite loop */
 	while (1)
@@ -119,10 +144,10 @@ int main(void)
 				IAP_WriteFlag(UPDATE_FLAG_DATA);
 			break;
 		case INIT_FLAG_DATA:  //initialze state (blank mcu)
-			IAP_Main_Menu();
+			IAP_Main_Menu(fram);
 			break;
 		case UPDATE_FLAG_DATA:  // download app state
-			if (IAP_Update())
+			if (IAP_Update(fram))
 			{
 				//IAP_WriteFlag(APPRUN_FLAG_DATA);
 				NVIC_SystemReset();

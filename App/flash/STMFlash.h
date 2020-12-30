@@ -10,6 +10,7 @@
 
 #include "stm32f10x.h"
 #include <string.h>
+#include "tcp_public.h"
 
 #define STM32_FLASH_SIZE 256 	 		//所选STM32的FLASH容量大小(单位为K)
 #define STM32_FLASH_WREN 1              //使能FLASH写入(0，不使能;1，使能)
@@ -57,5 +58,12 @@ void ReadAPPServer(void);
 
 void WriteIgnoreLock(u8 inx, u8 sta);
 u8 ReadIgnoreLock(u8 inx);
+
+void WriteWifiSsid(void);
+void ReadWifiSsid(void);
+void WriteWifiPwd(void);
+void ReadWifiPwd(void);
+void WriteWifiFlag(void);
+u16 ReadWifiFlag(void);
 
 #endif /* FLASH_STMFLASH_H_ */

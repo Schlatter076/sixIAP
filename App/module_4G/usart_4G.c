@@ -6,8 +6,6 @@
  */
 #include "usart_4G.h"
 
-char ip[] = "server.dayitc.com";
-char port[] = "5599";
 
 void USART2_Init(uint32_t bound)
 {
@@ -55,7 +53,7 @@ void F4G_Init(u32 bound)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
 
-	F4G_Fram.init = 1;
+	initing = 1;
 
 	USART2_Init(bound);
 
@@ -86,10 +84,9 @@ void F4G_Init(u32 bound)
 			Send_AT_Cmd(In4G, "AT+CIPCLOSE", "OK", NULL, 500);
 			Send_AT_Cmd(In4G, "AT+RSTSET", "OK", NULL, 500);
 		} while (!AT_Test(In4G));
-
 		//填充好相关信息
 		getModuleMes();
-		ConnectToServerBy4G(ip, port);
+		F4G_Fram.allowHeart = 0;
 	}
 }
 

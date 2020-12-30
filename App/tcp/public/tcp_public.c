@@ -10,6 +10,11 @@ struct STRUCT_USART_Params TCP_Params =
 { 0 };
 struct STRUCT_USART_Fram F4G_Fram =
 { 0 };
+struct STRUCT_USART_Fram WIFI_Fram =
+{ 0 };
+
+ParamsOfWifiJoinAP_TypeDef ParamsOfWifiJoinAPInit =
+{ 0 };
 
 static char *myitoa(int value, char *string, int radix)
 {
@@ -161,6 +166,11 @@ bool Send_AT_Cmd(ENUM_Internet_TypeDef internet, char *cmd, char *ack1,
 		USART_Fram = &F4G_Fram;
 		USARTx = USART2;
 	}
+	else
+	{
+		USART_Fram = &WIFI_Fram;
+		USARTx = UART4;
+	}
 
 	//USART_Fram->IsNotInAT = 0; //AT指令进行中
 
@@ -206,7 +216,7 @@ bool AT_Test(ENUM_Internet_TypeDef internet)
 	{
 		sprintf(module, "%s", "WIFI module");
 	}
-	while (count++ < 8)
+	while (count++ < 4)
 	{
 		Send_AT_Cmd(internet, "AT", "OK", NULL, 500);
 	}

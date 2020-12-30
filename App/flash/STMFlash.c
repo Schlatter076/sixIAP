@@ -7,14 +7,18 @@
 #include "STMFlash.h"
 
 __IO char *WDeviceID = NULL;
-__IO char RDeviceID[9] = {0};
+__IO char RDeviceID[9] =
+{ 0 };
 
 char *WVersion = NULL;
-char RVersion[21] = {0};
+char RVersion[21] =
+{ 0 };
 
-char APPServer[101] = {0};
+char APPServer[101] =
+{ 0 };
 
-unsigned char IgnoreLock[6] = {0};
+unsigned char IgnoreLock[6] =
+{ 0 };
 
 //读取指定地址的半字(16位数据)
 //faddr:读地址(此地址必须为2的倍数!!)
@@ -163,12 +167,45 @@ void ReadAPPServer(void)
 
 void WriteIgnoreLock(u8 inx, u8 sta)
 {
-	 IgnoreLock[inx] = sta;
-	 STMFLASH_Write(IGNORE_LOCK_ADDR, (u16 *) IgnoreLock, 3);
+	IgnoreLock[inx] = sta;
+	STMFLASH_Write(IGNORE_LOCK_ADDR, (u16 *) IgnoreLock, 3);
 }
 
 u8 ReadIgnoreLock(u8 inx)
 {
 	STMFLASH_Read(IGNORE_LOCK_ADDR, (u16 *) IgnoreLock, 3);
 	return IgnoreLock[inx];
+}
+
+void WriteWifiSsid(void)
+{
+	STMFLASH_Write(WIFI_SSID_ADDR, (u16 *) ParamsOfWifiJoinAPInit.ssid, 50);
+}
+void ReadWifiSsid(void)
+{
+	STMFLASH_Read(WIFI_SSID_ADDR, (u16 *) ParamsOfWifiJoinAPInit.ssid, 50);
+	ParamsOfWifiJoinAPInit.ssid[99] = '\0'; //添加结束符
+}
+
+void WriteWifiPwd(void)
+{
+	STMFLASH_Write(WIFI_PWD_ADDR, (u16 *) ParamsOfWifiJoinAPInit.pwd, 50);
+}
+void ReadWifiPwd(void)
+{
+	STMFLASH_Read(WIFI_PWD_ADDR, (u16 *) ParamsOfWifiJoinAPInit.pwd, 50);
+	ParamsOfWifiJoinAPInit.pwd[99] = '\0'; //添加结束符
+}
+
+void WriteWifiFlag(void)
+{
+	u16 flag = 0x5746;
+	STMFLASH_Write(WIFI_FLAG_ADDR, &flag, 1);
+}
+
+u16 ReadWifiFlag(void)
+{
+	u16 flag = 0;
+	STMFLASH_Read(WIFI_FLAG_ADDR, &flag, 1);
+	return flag;
 }
