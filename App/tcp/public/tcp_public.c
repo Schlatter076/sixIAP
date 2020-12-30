@@ -216,7 +216,7 @@ bool AT_Test(ENUM_Internet_TypeDef internet)
 	{
 		sprintf(module, "%s", "WIFI module");
 	}
-	while (count++ < 4)
+	while (count++ < 8)
 	{
 		Send_AT_Cmd(internet, "AT", "OK", NULL, 500);
 	}
