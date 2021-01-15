@@ -495,34 +495,32 @@ int8_t IAP_Update(struct STRUCT_USART_Fram *fram)
 					}
 					printf(")\r\n");
 					RamSource = (uint32_t) flashBuf;
-					if (size < len - 1)
+//					if (size < len - 1)
+//					{
+					for (j = 0;
+							(j < frameSize)
+									&& (flashDes
+											< ApplicationAddress + appBytesSize);
+							j += 4)
 					{
-						for (j = 0;
-								(j < frameSize)
-										&& (flashDes
-												< ApplicationAddress
-														+ appBytesSize); j += 4)
+						/* Program the data received into STM32F10x Flash */
+						FLASH_Unlock();
+						FLASH_ProgramWord(flashDes, *(uint32_t *) RamSource);
+						FLASH_Lock();
+						if (*(uint32_t *) flashDes != *(uint32_t *) RamSource)
 						{
-							/* Program the data received into STM32F10x Flash */
-							FLASH_Unlock();
-							FLASH_ProgramWord(flashDes,
-									*(uint32_t *) RamSource);
-							FLASH_Lock();
-							if (*(uint32_t *) flashDes
-									!= *(uint32_t *) RamSource)
-							{
-								printf("write to flash error,addr=%08X\r\n",
-										(unsigned int) flashDes);
-								delay_ms(1000);
-								delay_ms(1000);
-								delay_ms(1000);
-								updating = 0;
-								return 0;
-							}
-							flashDes += 4;
-							RamSource += 4;
+							printf("write to flash error,addr=%08X\r\n",
+									(unsigned int) flashDes);
+							delay_ms(1000);
+							delay_ms(1000);
+							delay_ms(1000);
+							updating = 0;
+							return 0;
 						}
+						flashDes += 4;
+						RamSource += 4;
 					}
+//					}
 				}
 			}
 		}
